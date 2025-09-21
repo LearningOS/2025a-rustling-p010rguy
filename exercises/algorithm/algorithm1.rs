@@ -2,7 +2,6 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
@@ -69,14 +68,58 @@ impl<T> LinkedList<T> {
             },
         }
     }
-	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
+	pub fn merge(mut list_a:LinkedList<T>,mut list_b:LinkedList<T>) -> Self
+    where
+        T: Ord,
 	{
 		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
+		let mut merged = LinkedList::new();
+        let mut ptr_a = list_a.start.take();
+        let mut ptr_b = list_b.start.take();
+
+        let mut tail: Option<NonNull<Node<T>>> = None;
+
+        while ptr_a.is_some() || ptr_b.is_some() { 
+            let pick_a = match (ptr_a, ptr_b) {
+                (Some(pa), Some(pb)) => unsafe {
+                    (*pa.as_ptr()).val <= (*pb.as_ptr()).val
+                },
+            (Some(_), None) => true,
+            (None, Some(_)) => false,
+            (None, None) => break,
+        };
+
+        let next;
+        let picked;
+
+        if pick_a {
+            picked = ptr_a.unwrap();
+            unsafe {
+                next = (*picked.as_ptr()).next.take();
+            }
+            ptr_a = next;
+        } else {
+            picked = ptr_b.unwrap();
+            unsafe {
+                next = (*picked.as_ptr()).next.take();
+            }
+            ptr_b = next;
         }
+
+        if tail.is_none() {
+            merged.start = Some(picked);
+        } else {
+            unsafe {
+                (*tail.unwrap().as_ptr()).next = Some(picked);
+            }
+        }
+        tail = Some(picked);
+        merged.length += 1;
+    }
+
+    merged.end = tail;
+
+    merged
 	}
 }
 
